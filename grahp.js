@@ -29,7 +29,7 @@ async function createGraph(rl) {
         continue
       }
 
-      const word = line.split(' /')[0].split(' ')[0]
+      const word = line.split(' ')[0]
 
       if (!word || !word.length) {
         continue
@@ -45,9 +45,7 @@ async function createGraph(rl) {
 
       stats[vowelsCount]++
 
-      if (vowelsCount === 1) {
-        processWord(nodes, edges, word)
-      }
+      processWord(nodes, edges, word)
     }
 
     return {
@@ -61,16 +59,30 @@ function processWord(nodes, edges, word) {
     const start = nodes.find(n => n.id === 0)
     const end = nodes.find(n => n.id === 1)
 
+    const syllablesCount = word.split('').reduce((count, letter) => {
+        if (vowels.includes(letter)) {count++}
+        return count
+    }, 0)
+    let currentSyllable = 0
+
     let prev = start
     let part = 1
 
     word.split('').forEach(letter => {
         const current = getNode(nodes, letter, part)
+
         useEdge(edges, prev, current)
         prev = current
 
+        const lastSyllable = currentSyllable === syllablesCount
+        if (part === 2 && !lastSyllable) {
+            part = 1
+            prev = getNode(nodes, letter, part)
+        }
+
         if (vowels.includes(current.name)) {
             part = 2
+            currentSyllable++
         }
     })
 

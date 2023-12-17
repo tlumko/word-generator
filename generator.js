@@ -19,7 +19,12 @@ function generateWord({nodes, edges}) {
     while (currentNode.id !== end.id) {
         const lastSyllable = currentSyllable === syllablesCount
         const edge = chooseRandomEdge({nodes, edges, currentNode, lastSyllable, end, consonantsStrike})
-        currentNode = nodes.find(node => node.id === edge.to)
+
+        if (edge) {
+            currentNode = nodes.find(node => node.id === edge.to)
+        } else {
+            currentNode = end
+        }
 
         if (vowels.includes(currentNode.name)) {
             currentSyllable++
@@ -27,7 +32,7 @@ function generateWord({nodes, edges}) {
         }
 
         if (currentNode.part === 2 && !lastSyllable) {
-            currentNode = nodes.find(node => node.name === currentNode.name && node.part === 1)
+            currentNode = nodes.find(node => node.name === currentNode.name && node.part === 1) || currentNode
         }
 
         path.push(currentNode)
