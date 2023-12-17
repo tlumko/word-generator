@@ -1,23 +1,24 @@
+const { vowels } = require('./constants')
+
 module.exports = {
     createGraph,
 }
-
-const vowels = ['а', 'о', 'и', 'і', 'у', 'е', 'я', 'ю', 'є', 'ї']
 
 async function createGraph(rl) {
     const nodes = [
         {
             id: 0,
-            name: 'end'
+            name: 'start',
         },
         {
             id: 1,
-            name: 'start',
+            name: 'end'
         },
     ]
 
     const edges = []
 
+    const stats = {}
 
     for await (const line of rl) {
       if (!line.length) {
@@ -38,6 +39,12 @@ async function createGraph(rl) {
         .split('')
         .reduce((count, letter) => count += vowels.includes(letter) ? 1 : 0, 0)
 
+      if (!stats[vowelsCount]) {
+        stats[vowelsCount] = 0
+      }
+
+      stats[vowelsCount]++
+
       if (vowelsCount === 1) {
         processWord(nodes, edges, word)
       }
@@ -46,26 +53,32 @@ async function createGraph(rl) {
     return {
         nodes,
         edges,
+        stats
     }
 }
 
 function processWord(nodes, edges, word) {
-    const start = nodes.find(n => n.id === 1)
-    const end = nodes.find(n => n.id === 0)
+    const start = nodes.find(n => n.id === 0)
+    const end = nodes.find(n => n.id === 1)
 
     let prev = start
+    let part = 1
 
     word.split('').forEach(letter => {
-        const current = getNode(nodes, letter)
+        const current = getNode(nodes, letter, part)
         useEdge(edges, prev, current)
         prev = current
+
+        if (vowels.includes(current.name)) {
+            part = 2
+        }
     })
 
     useEdge(edges, prev, end)
 }
 
-function getNode(nodes, letter) {
-    const existing = nodes.find(n => n.name === letter)
+function getNode(nodes, letter, part) {
+    const existing = nodes.find(n => n.name === letter && n.part === part)
 
     if (existing) {
         return existing
@@ -73,7 +86,8 @@ function getNode(nodes, letter) {
 
     nodes.push({
         name: letter,
-        id: nodes.length
+        id: nodes.length,
+        part,
     })
 
     return nodes[nodes.length-1]
