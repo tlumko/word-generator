@@ -51,7 +51,7 @@ async function createGraph(rl) {
     return {
         nodes,
         edges,
-        stats
+        stats,
     }
 }
 
@@ -59,38 +59,19 @@ function processWord(nodes, edges, word) {
     const start = nodes.find(n => n.id === 0)
     const end = nodes.find(n => n.id === 1)
 
-    const syllablesCount = word.split('').reduce((count, letter) => {
-        if (vowels.includes(letter)) {count++}
-        return count
-    }, 0)
-    let currentSyllable = 0
-
     let prev = start
-    let part = 1
-
     word.split('').forEach(letter => {
-        const current = getNode(nodes, letter, part)
+        const current = getNode(nodes, letter)
 
         useEdge(edges, prev, current)
         prev = current
-
-        const lastSyllable = currentSyllable === syllablesCount
-        if (part === 2 && !lastSyllable) {
-            part = 1
-            prev = getNode(nodes, letter, part)
-        }
-
-        if (vowels.includes(current.name)) {
-            part = 2
-            currentSyllable++
-        }
     })
 
     useEdge(edges, prev, end)
 }
 
-function getNode(nodes, letter, part) {
-    const existing = nodes.find(n => n.name === letter && n.part === part)
+function getNode(nodes, letter) {
+    const existing = nodes.find(n => n.name === letter)
 
     if (existing) {
         return existing
@@ -99,7 +80,6 @@ function getNode(nodes, letter, part) {
     nodes.push({
         name: letter,
         id: nodes.length,
-        part,
     })
 
     return nodes[nodes.length-1]

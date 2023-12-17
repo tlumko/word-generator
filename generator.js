@@ -5,7 +5,7 @@ module.exports = {
 }
 
 function generateWord({nodes, edges}) {
-    const syllablesCount = random(3) + 1
+    const syllablesCount = random(4) + 1
     let currentSyllable = 0
 
     const start = nodes.find(n => n.id === 0)
@@ -31,10 +31,6 @@ function generateWord({nodes, edges}) {
             consonantsStrike = 0
         }
 
-        if (currentNode.part === 2 && !lastSyllable) {
-            currentNode = nodes.find(node => node.name === currentNode.name && node.part === 1) || currentNode
-        }
-
         path.push(currentNode)
         consonantsStrike++
     }
@@ -54,7 +50,15 @@ function chooseRandomEdge({nodes, edges, currentNode, lastSyllable, end, consona
 
         const target = nodes.find(node => node.id === edge.to)
         if (vowels.includes(target.name)) {
-            edge.tempWeight = edge.tempWeight * consonantsStrike
+            if (lastSyllable) {
+                edge.tempWeight = 0
+            } else {
+                edge.tempWeight = edge.tempWeight * consonantsStrike
+            }
+        }
+
+        if (target === end) {
+            edge.tempWeight = edge.tempWeight * consonantsStrike * 2
         }
 
         return edge
