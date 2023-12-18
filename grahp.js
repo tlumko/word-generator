@@ -56,12 +56,14 @@ async function createGraph(rl) {
 }
 
 function processWord(nodes, edges, word) {
+    const syllables = splitSyllables(word)
+
     const start = nodes.find(n => n.id === 0)
     const end = nodes.find(n => n.id === 1)
 
     let prev = start
-    word.split('').forEach(letter => {
-        const current = getNode(nodes, letter)
+    syllables.forEach(syllable => {
+        const current = getNode(nodes, syllable)
 
         useEdge(edges, prev, current)
         prev = current
@@ -70,15 +72,55 @@ function processWord(nodes, edges, word) {
     useEdge(edges, prev, end)
 }
 
-function getNode(nodes, letter) {
-    const existing = nodes.find(n => n.name === letter)
+function splitSyllables(word) {
+    const syllables = []
+    const vowelPositions = []
+
+    word.split('').forEach((letter, index) => {
+        if (vowels.includes(letter)) {
+            vowelPositions.push(index)
+        }
+    })
+
+    let cursor = 0
+    for (let i = 0; i < vowelPositions.length; i++) {
+        const current = vowelPositions[i]
+        const next = vowelPositions[i+1]
+
+        if (!next) {
+            syllables.push(word.slice(cursor))
+            continue
+        }
+
+        let boundary
+        if (next - current <= 2) {
+            boundary = current+1
+        }
+
+        if (next - current > 2) {
+            boundary = current+2
+        }
+
+        if (word[boundary] === 'ь') {
+            boundary++
+        }
+
+        syllables.push(word.slice(cursor, boundary))
+        cursor = boundary
+    }
+
+    return syllables
+}
+
+function getNode(nodes, syllable) {
+    const existing = nodes.find(n => n.name === syllable)
 
     if (existing) {
         return existing
     }
 
     nodes.push({
-        name: letter,
+        name: syllable,
         id: nodes.length,
     })
 

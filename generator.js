@@ -5,20 +5,15 @@ module.exports = {
 }
 
 function generateWord({nodes, edges}) {
-    const syllablesCount = random(4) + 1
-    let currentSyllable = 0
-
     const start = nodes.find(n => n.id === 0)
     const end = nodes.find(n => n.id === 1)
     const path = []
 
     let currentNode = start
-    let consonantsStrike = 1
     path.push(currentNode)
 
     while (currentNode.id !== end.id) {
-        const lastSyllable = currentSyllable === syllablesCount
-        const edge = chooseRandomEdge({nodes, edges, currentNode, lastSyllable, end, consonantsStrike})
+        const edge = chooseRandomEdge({edges, currentNode})
 
         if (edge) {
             currentNode = nodes.find(node => node.id === edge.to)
@@ -26,51 +21,23 @@ function generateWord({nodes, edges}) {
             currentNode = end
         }
 
-        if (vowels.includes(currentNode.name)) {
-            currentSyllable++
-            consonantsStrike = 0
-        }
-
         path.push(currentNode)
-        consonantsStrike++
     }
 
     const word = path.slice(1, -1).reduce((str, node) => str += node.name, '')
     return word
 }
 
-function chooseRandomEdge({nodes, edges, currentNode, lastSyllable, end, consonantsStrike}) {
+function chooseRandomEdge({edges, currentNode}) {
     let availableEdges = edges.filter(edge => edge.from === currentNode.id)
-    if (!lastSyllable) {
-        availableEdges = availableEdges.filter(edge => edge.to !== end.id)
-    }
 
-    availableEdges = availableEdges.map(edge => {
-        edge.tempWeight = edge.weight
-
-        const target = nodes.find(node => node.id === edge.to)
-        if (vowels.includes(target.name)) {
-            if (lastSyllable) {
-                edge.tempWeight = 0
-            } else {
-                edge.tempWeight = edge.tempWeight * consonantsStrike
-            }
-        }
-
-        if (target === end) {
-            edge.tempWeight = edge.tempWeight * consonantsStrike * 2
-        }
-
-        return edge
-    })
-
-    const combindedWeight = availableEdges.reduce((sum, edge) => sum += edge.tempWeight, 0)
+    const combindedWeight = availableEdges.reduce((sum, edge) => sum += edge.weight, 0)
 
     const rand = random(combindedWeight)
     let s = 0
 
     const chosenEdge = availableEdges.find(edge => {
-        s += edge.tempWeight
+        s += edge.weight
 
         if (s >= rand) {
             return edge
